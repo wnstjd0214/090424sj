@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성일정보고등학교 오늘의 급식</title>
+    <style>
+        .clock-container {
+            border: 2px solid #333;
+            padding: 15px;
+            width: 300px;
+            background-color: #f9f9f9;
+            margin-bottom: 20px;
+        }
+
+        .clock-title {
+            margin: 0;
+            color: #555;
+        }
+
+        #digital-clock {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+            font-family: monospace;
+        }
+       
+        #meal-box {
+            font-size: 1.2rem;
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="clock-container">
+        <h3 class="clock-title">현재 시간</h3>
+        <div id="digital-clock">00:00:00</div>
+    </div>
+
+    <hr>
+
+    <h1>성일정보고등학교 오늘의 급식</h1>
+    <h3 id="data-display">조회 중...</h3>
+    <pre id="meal-box">급식을 실시간으로 불러오는 중입니다...</pre>
+
+    <script>
+        // 여기는 시간 코드
+        const updateClock = () => {
+            const now = new Date();
+
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let secondes = now.getSeconds();
+
+            if (hours < 10) hours = '0' + hours;
+            if (minutes < 10) minutes = '0' + minutes;
+            if (secondes < 10) secondes = '0' + secondes;
+
+            document.querySelector('#digital-clock').textContent = `${hours}:${minutes}:${secondes}`;
+        }
+
+        // 시계 무한 반복 타이머 등록
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 여기부터는 급식 코드
+        const today = new Date();
+        const year = today.getFullYear();
+
+        let month = today.getMonth() + 1;
+        if (month < 10) {
+            month = '0' + month;
+        }
+
+        let date = today.getDate();
+        if (date < 10) {
+            date = '0' + date;
+        }
+
+        const todayString = `${year}${month}${date}`;
+
+        document.querySelector('#data-display').textContent = `조회 날짜: ${year}년 ${month}월 ${date}일 (${todayString})`;
+
+        const getTodayMeal = async () => {
+            const myApiKey = "85e4670afcdc497cb38ba540efeed255";
+            const officeCode = "J10";
+            const schoolCode = "7530591";
+
+            const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${myApiKey}&Type=json&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${todayString}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.mealServiceDietInfo) {
+                    const mealRow = data.mealServiceDietInfo[1].row[0];
+                    const cleanMenu = mealRow.DDISH_NM.replace(/<br\/>/g, '\n');
+                    const calories = mealRow.CAL_INFO;
+
+                    document.querySelector('#meal-box').textContent = `${cleanMenu}\n\n[총 칼로리: ${calories}]`;
+                } else {
+                    document.querySelector('#meal-box').textContent = '오늘 일자에는 급식 정보가 없습니다. (주말 또는 공휴일)';
+                }
+            } catch (error) {
+                document.querySelector('#meal-box').textContent = '서버 통신 실패! 인터넷 연결이나 코드를 닷 ㅣ확인해 주세요.';
+                console.error('비동기 통신 에러 로그: ', error);
+            }
+        };
+       
+        document.addEventListener('DOMContentLoaded', getTodayMeal);
+    </script>
+</body>
+</html>

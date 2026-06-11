@@ -83,6 +83,10 @@ body {
 .notice {
     width: 65%;
 }
+.clock-container{
+    
+    margin-left : 250px;
+}
 .notice .table-box {
     background-color: #fff;
     padding: 15px;
